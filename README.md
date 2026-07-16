@@ -29,7 +29,103 @@ The system utilizes a unified database approach, storing both relational applica
 * **QUERIES:** Logs the system's operational history (`query_id`, `user_id` [FK], `user_prompt`, `ai_answer`, `timestamp`).
 * **FEEDBACK:** Captures quality assurance metrics (`feedback_id`, `query_id` [FK], `rating`, `engineers_comment`).
 
-## 4. Development Milestones & Implemented Phases
+## 4. Getting Started
+
+### Prerequisites
+
+Before setting up the project locally, ensure you have the following installed:
+
+* **Git:** For cloning the repository.
+* **Docker & Docker Compose:** For containerized local development.
+* **Python 3.10+:** Required for running ingestion scripts locally.
+* **Groq API Key:** Create a free account at [Groq Console](https://console.groq.com/) to obtain your API key for LLM inference.
+
+### Cloning the Repository
+
+Clone the repository from GitHub to your local machine:
+
+```bash
+git clone https://github.com/Calvin-Gacheru/AI-KNOWLEDGE-RETRIEVAL-SYSTEM.git
+cd AI-KNOWLEDGE-RETRIEVAL-SYSTEM
+```
+
+### Local Setup
+
+1. **Create Environment File:**
+   Create a `.env` file in the project root directory to store sensitive configuration:
+
+   ```bash
+   GROQ_API_KEY=your_groq_api_key_here
+   DATABASE_URL=postgresql://postgres:postgres@postgres_db:5432/rag_db
+   ```
+
+   Replace `your_groq_api_key_here` with your actual Groq API key obtained from the Groq Console.
+
+2. **Install Python Dependencies (Optional):**
+   If you need to run ingestion scripts locally (outside Docker), install dependencies in a Python virtual environment:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. **Prepare Documents:**
+   Place any PDF documents you want to ingest into the project root directory. Update the `ingest.py` script to point to your document filename if needed.
+
+### Running the Application
+
+Start the entire application stack (PostgreSQL, FastAPI backend, and frontend) using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This command will:
+* Build the FastAPI application container
+* Spin up a PostgreSQL container with pgvector extension enabled
+* Initialize the database schema automatically on startup
+* Start the application on port 8000
+
+Once the containers are running, access the application:
+
+* **Frontend Interface:** `http://localhost:8000/`
+* **API Documentation (Swagger UI):** `http://localhost:8000/docs`
+
+### Ingesting Documents
+
+To ingest PDF documents into the vector database:
+
+1. **While Docker is running**, execute the ingestion script locally:
+
+   ```bash
+   # Make sure your virtual environment is activated
+   python ingest.py
+   ```
+
+   This will:
+   * Parse the PDF specified in `ingest.py`
+   * Chunk the content using RecursiveCharacterTextSplitter
+   * Generate embeddings using Hugging Face `all-MiniLM-L6-v2`
+   * Store chunks and embeddings in the PostgreSQL database
+
+2. The documents will be immediately available for semantic search through the `/ask` endpoint.
+
+### Stopping the Application
+
+To stop the running containers:
+
+```bash
+docker compose down
+```
+
+To stop containers and remove volumes (warning: this deletes data):
+
+```bash
+docker compose down -v
+```
+
+## 5. Development Milestones & Implemented Phases
 
 ### Phase 1: Foundation & Database Initialization
 
@@ -58,22 +154,7 @@ Engineered the core intelligence of the application, connecting user inputs to b
 * **Frontend Dashboard:** Developed a responsive, single-page application using Tailwind CSS. It features asynchronous JavaScript `fetch` calls, loading state animations, and renders the LLM's Markdown output.
 * **Quality Assurance Loop:** Implemented a `/feedback` endpoint and UI integration allowing Senior Engineers to rate AI responses (1 to 5) directly from the interface, linking the rating back to the specific `query_id` for future system optimization.
 
-## 5. Running the Application
-
-Ensure the Docker daemon is running on your machine. From the project root directory, execute:
-
-```bash
-docker compose up --build -d
-
-```
-
-* **Frontend Interface:** `http://localhost:8000/`
-* **API Documentation (Swagger UI):** `http://localhost:8000/docs`
-* **Database:** Accessible via port `5432` on the Docker network.
-
-To ingest new documents, place the PDF in the root directory, ensure `ingest.py` points to the correct filename, and run the script locally while the database container is active.
-
-## Phase 4: Future Enhancements
+## 6. Future Enhancements
 1) Production Deployment: Containerize the FastAPI backend and static frontend. Deploy to a cloud environment and migrate to a managed PostgreSQL instance to handle pgvector at scale.
 
 2) Authentication and Role-Based Access: Implement JWT or OAuth. Restrict the feedback endpoint so only authenticated users with the "Senior Engineer" role can submit ratings.
