@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pgvector
+langchain-huggingface
+sentence-transformers
+langchain-groq
+pypdf
+python-dotenv
